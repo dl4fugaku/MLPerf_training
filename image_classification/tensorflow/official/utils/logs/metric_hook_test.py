@@ -21,7 +21,7 @@ from __future__ import print_function
 import tempfile
 import time
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow.python.training import monitored_session
 
 from official.utils.logs import metric_hook  # pylint: disable=g-bad-import-order

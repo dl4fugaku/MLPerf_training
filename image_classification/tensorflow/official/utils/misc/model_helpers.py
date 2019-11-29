@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import numbers
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 def past_stop_threshold(stop_threshold, eval_metric):

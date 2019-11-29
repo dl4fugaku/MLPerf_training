@@ -19,7 +19,7 @@ from __future__ import print_function
 
 import unittest
 
-import tensorflow as tf  # pylint: disable=g-bad-import-order
+import tensorflow.compat.v1 as tf  # pylint: disable=g-bad-import-order
 
 from official.resnet import imagenet_main
 from official.utils.testing import integration

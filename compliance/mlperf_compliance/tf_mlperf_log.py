@@ -27,7 +27,7 @@ from __future__ import print_function
 
 import uuid
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 def log_deferred(op, log_id, every_n=1, first_n=None):

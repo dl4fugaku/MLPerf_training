@@ -26,7 +26,7 @@ from __future__ import print_function
 import argparse
 import os
 
-import tensorflow as tf  # pylint: disable=g-bad-import-order
+import tensorflow.compat.v1 as tf  # pylint: disable=g-bad-import-order
 
 from mlperf_compliance import mlperf_log
 from mlperf_compliance import tf_mlperf_log
@@ -83,7 +83,7 @@ def process_record_dataset(dataset, is_training, batch_size, shuffle_buffer,
   # num_parallel_batches > 1 produces no improvement in throughput, since
   # batch_size is almost always much greater than the number of CPU cores.
   dataset = dataset.apply(
-      tf.contrib.data.map_and_batch(
+      tf.data.experimental.map_and_batch(
           lambda value: parse_record_fn(value, is_training, dtype),
           batch_size=batch_size,
           num_parallel_batches=1))
@@ -94,7 +94,7 @@ def process_record_dataset(dataset, is_training, batch_size, shuffle_buffer,
   # critical training path. Setting buffer_size to tf.contrib.data.AUTOTUNE
   # allows DistributionStrategies to adjust how many batches to fetch based
   # on how many devices are present.
-  dataset = dataset.prefetch(buffer_size=tf.contrib.data.AUTOTUNE)
+  dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 
   return dataset
 
@@ -463,11 +463,11 @@ def resnet_main(seed, flags, model_function, input_function, shape=None):
       allow_soft_placement=True)
 
   if flags.num_gpus == 0:
-    distribution = tf.contrib.distribute.OneDeviceStrategy('device:CPU:0')
+    distribution = tf.distribute.OneDeviceStrategy('device:CPU:0')
   elif flags.num_gpus == 1:
-    distribution = tf.contrib.distribute.OneDeviceStrategy('device:GPU:0')
+    distribution = tf.distribute.OneDeviceStrategy('device:GPU:0')
   else:
-    distribution = tf.contrib.distribute.MirroredStrategy(
+    distribution = tf.distribute.MirroredStrategy(
         num_gpus=flags.num_gpus
     )
 

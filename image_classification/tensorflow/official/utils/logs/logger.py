@@ -28,7 +28,7 @@ import multiprocessing
 import numbers
 import os
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow.python.client import device_lib
 
 METRIC_LOG_FILE_NAME = "metric.log"

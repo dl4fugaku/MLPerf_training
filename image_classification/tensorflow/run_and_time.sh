@@ -7,7 +7,8 @@
 set -e
 
 # start timing 
-start=$(date +%s)
+#start=$(date +%s)
+start=1
 start_fmt=$(date +%Y-%m-%d\ %r)
 echo "STARTING TIMING RUN AT $start_fmt"
 

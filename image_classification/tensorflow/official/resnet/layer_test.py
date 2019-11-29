@@ -33,7 +33,7 @@ from __future__ import print_function
 
 import sys
 
-import tensorflow as tf   # pylint: disable=g-bad-import-order
+import tensorflow.compat.v1 as tf   # pylint: disable=g-bad-import-order
 from official.resnet import resnet_model
 from official.utils.testing import reference_data
 

@@ -23,7 +23,7 @@ import sys
 import random
 
 import numpy.random
-import tensorflow as tf  # pylint: disable=g-bad-import-order
+import tensorflow.compat.v1 as tf  # pylint: disable=g-bad-import-order
 
 from mlperf_compliance import mlperf_log
 from official.resnet import imagenet_preprocessing

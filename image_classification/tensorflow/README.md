@@ -1,38 +1,51 @@
-Install
-==========
+setup
+=====
+python3.7 -m pip install -r requirements.txt
+sed -i -e 's/import tensorflow as tf/import tensorflow as tf/' /scr0/jens/spack/opt/spack/linux-centos7-x86_64/gcc-9.1.0/python-3.7.3-civ2iiqopzfrzuhnit4hpexjlm4uwp5b/lib/python3.7/site-packages/mlperf_compliance/tf_mlperf_log.py
 
-In order to run this, you must first set stuff up... for now see Transformer's README.
+get imagenet downloader
+=======================
+wget https://raw.githubusercontent.com/tensorflow/tpu/master/tools/datasets/imagenet_to_gcs.py
+(ignore; pushed into git)
 
+mod to use locale tar dump
+==========================
+(ignore; pushed into git)
 
-Downlaoding Data
-==========
+pre-process images
+==================
+cd <root>/image_classification/tensorflow
+python3.7 ./imagenet_to_gcs.py --local_scratch_dir=/scr0/jens/data/imagenet --nogcs_upload
+cp /scr0/jens/data/imagenet/validation/* /scr0/jens/data/imagenet/train/
 
-Downloading data is TBD.
+usage info (python3.6 official/resnet/imagenet_main.py 1 -h)
+============================================================
+usage: imagenet_main.py [-h] [--data_dir <DD>] [--model_dir <MD>]
+                        [--train_epochs <TE>] [--epochs_between_evals <EBE>]
+                        [--stop_threshold <ST>] [--batch_size <BS>]
+                        [--enable_lars] [--label_smoothing <LSM>]
+                        [--weight_decay <WD>] [--fine_tune] [--num_gpus <NG>]
+                        [--hooks <HK> [<HK> ...]]
+                        [--inter_op_parallelism_threads <INTER>]
+                        [--intra_op_parallelism_threads <INTRA>]
+                        [--use_synthetic_data] [--max_train_steps <MTS>]
+                        [--dtype <DT>] [--loss_scale LOSS_SCALE]
+                        [--data_format <CF>] [--export_dir <ED>]
+                        [--benchmark_log_dir <BLD>] [--gcp_project <GP>]
+                        [--bigquery_data_set <BDS>]
+                        [--bigquery_run_table <BRT>]
+                        [--bigquery_metric_table <BMT>] [--version {1,2}]
+                        [--resnet_size {18,34,50,101,152,200}]
 
+fix problems with TF 2.0.0
+==========================
+(ignore; pushed into git)
 
-Processing Data
-=============
+fix mlperf_compliance
+=====================
+(ignore; pushed into git)
 
-TBD.
-
-
-Running the Benchmark
-============
-
-You first must build the docker file;
-
-    docker build .
-
-
-Remember the image name/number.
-
-
-1. Make sure /imn on the host contains the pre-processed data. (Scripts for this TODO).
-2. Choose your random seed (below we use 77)
-3. Enter your docker's image name (below we use 5ca81979cbc2 which you don't have)
-
-Then, executute the following:
-
-    sudo docker run -v /imn:/imn --runtime=nvidia -t -i 5ca81979cbc2 "./run_and_time.sh" 77 | tee benchmark.log
-
+finally run it (modded to run 1k steps and 1 epoch only)
+========================================================
+time ./run_and_time.sh
 

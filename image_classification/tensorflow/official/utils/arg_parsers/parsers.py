@@ -60,7 +60,7 @@ from __future__ import print_function
 
 import argparse
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 # Map string to (TensorFlow dtype, default loss scale)
