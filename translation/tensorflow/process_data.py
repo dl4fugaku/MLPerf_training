@@ -26,7 +26,7 @@ import tarfile
 import urllib
 
 import six
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import urllib.request
 
 from mlperf_compliance import mlperf_log

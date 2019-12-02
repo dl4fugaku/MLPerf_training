@@ -18,7 +18,7 @@ Source implementation from Tensor2Tensor:
 https://github.com/tensorflow/tensor2tensor/blob/master/tensor2tensor/utils/beam_search.py
 """
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow.python.util import nest
 
 
