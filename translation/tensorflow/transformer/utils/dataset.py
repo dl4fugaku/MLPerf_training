@@ -53,7 +53,7 @@ from __future__ import print_function
 
 import os
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from mlperf_compliance import mlperf_log
 
@@ -184,7 +184,7 @@ def _batch_examples(dataset, batch_size, max_length):
     # lengths as well. Resulting lengths of inputs and targets can differ.
     return grouped_dataset.padded_batch(bucket_batch_size, ([None], [None]))
 
-  return dataset.apply(tf.contrib.data.group_by_window(
+  return dataset.apply(tf.data.experimental.group_by_window(
       key_func=example_to_bucket_id,
       reduce_func=batching_fn,
       window_size=None,
@@ -217,7 +217,7 @@ def _read_and_batch_from_files(
   # Read files and interleave results. When training, the order of the examples
   # will be non-deterministic.
   dataset = dataset.apply(
-      tf.contrib.data.parallel_interleave(
+      tf.data.experimental.parallel_interleave(
           _load_records, sloppy=shuffle, cycle_length=num_cpu_cores))
 
   # Parse each tf.Example into a dictionary

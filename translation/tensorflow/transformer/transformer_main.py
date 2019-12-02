@@ -27,7 +27,8 @@ import numpy.random
 
 
 from six.moves import xrange  # pylint: disable=redefined-builtin
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_eager_execution()
 
 from mlperf_compliance import mlperf_log
 from mlperf_compliance import tf_mlperf_log
@@ -120,7 +121,7 @@ def get_train_op(loss, params):
                                  value=params.optimizer_adam_beta2)
     mlperf_log.transformer_print(key=mlperf_log.OPT_HP_ADAM_EPSILON,
                                  value=params.optimizer_adam_epsilon)
-    optimizer = tf.contrib.opt.LazyAdamOptimizer(
+    optimizer = tf.train.AdamOptimizer(
         learning_rate,
         beta1=params.optimizer_adam_beta1,
         beta2=params.optimizer_adam_beta2,

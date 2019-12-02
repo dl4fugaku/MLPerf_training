@@ -23,7 +23,7 @@ import os
 import sys
 
 from six.moves import xrange  # pylint: disable=redefined-builtin
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from data_download import VOCAB_FILE
 from model import model_params
