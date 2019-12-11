@@ -24,7 +24,7 @@ import go
 from tests import test_utils
 
 
-class TestSymmetryOperations(test_utils.MinigoUnitTest):
+class TestSymmetryOperations(test_utils.MiniGoUnitTest):
     def setUp(self):
         np.random.seed(1)
         self.feat = np.random.random([go.N, go.N, 3])
