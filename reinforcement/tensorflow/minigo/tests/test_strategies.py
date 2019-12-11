@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest import mock
+import unittest
+import unittest.mock as mock
 import numpy as np
-
-from absl import flags
 
 import coords
 import go
+from go import Position
 from tests import test_utils
-from strategies import MCTSPlayer, time_recommendation
+from mcts import MCTSNode, MAX_DEPTH
+from strategies import MCTSPlayerMixin, time_recommendation
 
 ALMOST_DONE_BOARD = test_utils.load_board('''
 .XO.XO.OO
@@ -34,7 +35,7 @@ XXXXXOOOO
 XXXXOOOOO
 ''')
 
-# Tromp taylor means black can win if we hit the move limit.
+#Tromp taylor means black can win if we hit the move limit.
 TT_FTW_BOARD = test_utils.load_board('''
 .XXOOOOOO
 X.XOO...O
@@ -58,7 +59,6 @@ SEND_TWO_RETURN_ONE = go.Position(
     to_play=go.BLACK
 )
 
-
 class DummyNet():
     def __init__(self, fake_priors=None, fake_value=0):
         if fake_priors is None:
@@ -76,9 +76,9 @@ class DummyNet():
         return [self.fake_priors] * len(positions), [self.fake_value] * len(positions)
 
 
-def initialize_basic_player(position=None):
-    player = MCTSPlayer(DummyNet())
-    player.initialize_game(position)
+def initialize_basic_player():
+    player = MCTSPlayerMixin(DummyNet())
+    player.initialize_game()
     first_node = player.root.select_leaf()
     first_node.incorporate_results(
         *player.network.run(player.root.position), up_to=player.root)
@@ -90,13 +90,13 @@ def initialize_almost_done_player():
     probs[2:5] = 0.2  # some legal moves along the top.
     probs[-1] = 0.2  # passing is also ok
     net = DummyNet(fake_priors=probs)
-    player = MCTSPlayer(net)
+    player = MCTSPlayerMixin(net)
     # root position is white to play with no history == white passed.
     player.initialize_game(SEND_TWO_RETURN_ONE)
     return player
 
 
-class TestMCTSPlayer(test_utils.MinigoUnitTest):
+class TestMCTSPlayerMixin(test_utils.MiniGoUnitTest):
     def test_time_controls(self):
         secs_per_move = 5
         for time_limit in (10, 100, 1000):
@@ -115,7 +115,7 @@ class TestMCTSPlayer(test_utils.MinigoUnitTest):
         player = initialize_basic_player()
         sum_priors = np.sum(player.root.child_prior)
         # dummyNet should return normalized priors.
-        self.assertAlmostEqual(1, sum_priors)
+        self.assertAlmostEqual(sum_priors, 1)
         self.assertTrue(np.all(player.root.child_U == player.root.child_U[0]))
 
         player.root.inject_noise()
@@ -125,7 +125,7 @@ class TestMCTSPlayer(test_utils.MinigoUnitTest):
 
         # With dirichelet noise, majority of density should be in one node.
         max_p = np.max(player.root.child_prior)
-        self.assertGreater(max_p, 3 / (go.N ** 2 + 1))
+        self.assertGreater(max_p, 3/(go.N ** 2 + 1))
 
     def test_pick_moves(self):
         player = initialize_basic_player()
@@ -139,7 +139,7 @@ class TestMCTSPlayer(test_utils.MinigoUnitTest):
         # Assert we're picking deterministically
         self.assertTrue(root.position.n > player.temp_threshold)
         move = player.pick_move()
-        self.assertEqual((2, 0), move)
+        self.assertEqual(move, (2, 0))
 
         # But if we're in the early part of the game, pick randomly
         root.position.n = 3
@@ -147,7 +147,7 @@ class TestMCTSPlayer(test_utils.MinigoUnitTest):
 
         with mock.patch('random.random', lambda: .5):
             move = player.pick_move()
-            self.assertEqual((2, 0), move)
+            self.assertEqual(move, (2, 0))
 
         with mock.patch('random.random', lambda: .99):
             move = player.pick_move()
@@ -157,17 +157,17 @@ class TestMCTSPlayer(test_utils.MinigoUnitTest):
         player = initialize_almost_done_player()
 
         # check -- white is losing.
-        self.assertEqual(-0.5, player.root.position.score())
+        self.assertEqual(player.root.position.score(), -0.5)
 
-        for _ in range(20):
+        for i in range(20):
             player.tree_search()
         # uncomment to debug this test
         # print(player.root.describe())
 
         # Search should converge on D9 as only winning move.
-        flattened = coords.to_flat(coords.from_gtp('D9'))
+        flattened = coords.to_flat(coords.from_kgs('D9'))
         best_move = np.argmax(player.root.child_N)
-        self.assertEqual(flattened, best_move)
+        self.assertEqual(best_move, flattened)
         # D9 should have a positive value
         self.assertGreater(player.root.children[flattened].Q, 0)
         self.assertGreaterEqual(player.root.N, 20)
@@ -181,20 +181,20 @@ class TestMCTSPlayer(test_utils.MinigoUnitTest):
     def test_parallel_tree_search(self):
         player = initialize_almost_done_player()
         # check -- white is losing.
-        self.assertEqual(-0.5, player.root.position.score())
+        self.assertEqual(player.root.position.score(), -0.5)
         # initialize the tree so that the root node has populated children.
-        player.tree_search(parallel_readouts=1)
+        player.tree_search(num_parallel=1)
         # virtual losses should enable multiple searches to happen simultaneously
         # without throwing an error...
-        for _ in range(5):
-            player.tree_search(parallel_readouts=4)
+        for i in range(5):
+            player.tree_search(num_parallel=4)
         # uncomment to debug this test
         # print(player.root.describe())
 
         # Search should converge on D9 as only winning move.
-        flattened = coords.to_flat(coords.from_gtp('D9'))
+        flattened = coords.to_flat(coords.from_kgs('D9'))
         best_move = np.argmax(player.root.child_N)
-        self.assertEqual(flattened, best_move)
+        self.assertEqual(best_move, flattened)
         # D9 should have a positive value
         self.assertGreater(player.root.children[flattened].Q, 0)
         self.assertGreaterEqual(player.root.N, 20)
@@ -207,15 +207,15 @@ class TestMCTSPlayer(test_utils.MinigoUnitTest):
         player = initialize_almost_done_player()
         # Test that an almost complete game
         # will tree search with # parallelism > # legal moves.
-        for _ in range(10):
-            player.tree_search(parallel_readouts=50)
+        for i in range(10):
+            player.tree_search(num_parallel=50)
         self.assertNoPendingVirtualLosses(player.root)
 
     def test_long_game_tree_search(self):
-        player = MCTSPlayer(DummyNet())
+        player = MCTSPlayerMixin(DummyNet())
         endgame = go.Position(
             board=TT_FTW_BOARD,
-            n=flags.FLAGS.max_game_length - 2,
+            n=MAX_DEPTH-2,
             komi=2.5,
             ko=None,
             recent=(go.PlayerMove(go.BLACK, (0, 1)),
@@ -224,39 +224,35 @@ class TestMCTSPlayer(test_utils.MinigoUnitTest):
         )
         player.initialize_game(endgame)
 
-        # Test that MCTS can deduce that B wins because of TT-scoring
-        # triggered by move limit.
-        for _ in range(10):
-            player.tree_search(parallel_readouts=8)
+        # Test that an almost complete game
+        for i in range(10):
+            player.tree_search(num_parallel=8)
         self.assertNoPendingVirtualLosses(player.root)
         self.assertGreater(player.root.Q, 0)
 
     def test_cold_start_parallel_tree_search(self):
         # Test that parallel tree search doesn't trip on an empty tree
-        player = MCTSPlayer(DummyNet(fake_value=0.17))
+        player = MCTSPlayerMixin(DummyNet(fake_value=0.17))
         player.initialize_game()
-        self.assertEqual(0, player.root.N)
+        self.assertEqual(player.root.N, 0)
         self.assertFalse(player.root.is_expanded)
-        leaves = player.tree_search(parallel_readouts=4)
-        self.assertEqual(4, len(leaves))
-        self.assertEqual(player.root, leaves[0])
-
+        player.tree_search(num_parallel=4)
         self.assertNoPendingVirtualLosses(player.root)
         # Even though the root gets selected 4 times by tree search, its
         # final visit count should just be 1.
-        self.assertEqual(1, player.root.N)
+        self.assertEqual(player.root.N, 1)
         # 0.085 = average(0, 0.17), since 0 is the prior on the root.
-        self.assertAlmostEqual(0.085, player.root.Q)
+        self.assertAlmostEqual(player.root.Q, 0.085)
 
     def test_tree_search_failsafe(self):
         # Test that the failsafe works correctly. It can trigger if the MCTS
         # repeatedly visits a finished game state.
         probs = np.array([.001] * (go.N * go.N + 1))
         probs[-1] = 1  # Make the dummy net always want to pass
-        player = MCTSPlayer(DummyNet(fake_priors=probs))
+        player = MCTSPlayerMixin(DummyNet(fake_priors=probs))
         pass_position = go.Position().pass_move()
         player.initialize_game(pass_position)
-        player.tree_search(parallel_readouts=8)
+        player.tree_search(num_parallel=1)
         self.assertNoPendingVirtualLosses(player.root)
 
     def test_only_check_game_end_once(self):
@@ -264,24 +260,28 @@ class TestMCTSPlayer(test_utils.MinigoUnitTest):
         # and we have to decide whether to pass, it should be the first thing
         # we check, but not more than that.
 
-        white_passed_pos = (go.Position()
-            .play_move((3, 3))  # b plays
-            .play_move((3, 4))  # w plays
-            .play_move((4, 3))  # b plays
-            .pass_move())  # w passes - if B passes too, B would lose by komi.
+        white_passed_pos = go.Position(
+        ).play_move((3, 3)  # b plays
+                    ).play_move((3, 4)  # w plays
+                                ).play_move((4, 3)  # b plays
+                                            ).pass_move()  # w passes - if B passes too, B would lose by komi.
 
-        player = initialize_basic_player(white_passed_pos)
+        player = MCTSPlayerMixin(DummyNet())
+        player.initialize_game(white_passed_pos)
+        # initialize the root
+        player.tree_search()
         # explore a child - should be a pass move.
         player.tree_search()
         pass_move = go.N * go.N
-        self.assertEqual(1, player.root.children[pass_move].N)
-        self.assertEqual(1, player.root.child_N[pass_move])
+        self.assertEqual(player.root.children[pass_move].N, 1)
+        self.assertEqual(player.root.child_N[pass_move], 1)
         player.tree_search()
         # check that we didn't visit the pass node any more times.
         self.assertEqual(player.root.child_N[pass_move], 1)
 
     def test_extract_data_normal_end(self):
-        player = initialize_basic_player()
+        player = MCTSPlayerMixin(DummyNet())
+        player.initialize_game()
         player.tree_search()
         player.play_move(None)
         player.tree_search()
@@ -290,27 +290,27 @@ class TestMCTSPlayer(test_utils.MinigoUnitTest):
         player.set_result(player.root.position.result(), was_resign=False)
 
         data = list(player.extract_data())
-        self.assertEqual(2, len(data))
-        position, _, result = data[0]
+        self.assertEqual(len(data), 2)
+        position, pi, result = data[0]
         # White wins by komi
-        self.assertEqual(go.WHITE, result)
-        self.assertEqual("W+{}".format(player.root.position.komi),
-                         player.result_string)
+        self.assertEqual(result, go.WHITE)
+        self.assertEqual(player.result_string, "W+{}".format(player.root.position.komi))
 
     def test_extract_data_resign_end(self):
-        player = initialize_basic_player()
+        player = MCTSPlayerMixin(DummyNet())
+        player.initialize_game()
         player.tree_search()
         player.play_move((0, 0))
         player.tree_search()
         player.play_move(None)
         player.tree_search()
         # Black is winning on the board
-        self.assertEqual(go.BLACK, player.root.position.result())
+        self.assertEqual(player.root.position.result(), go.BLACK)
         # But if Black resigns
         player.set_result(go.WHITE, was_resign=True)
 
         data = list(player.extract_data())
-        position, _, result = data[0]
+        position, pi, result = data[0]
         # Result should say White is the winner
-        self.assertEqual(go.WHITE, result)
-        self.assertEqual("W+R", player.result_string)
+        self.assertEqual(result, go.WHITE)
+        self.assertEqual(player.result_string, "W+R")

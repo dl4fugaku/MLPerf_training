@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
+'''
 Code to extract a series of positions + their next moves from an SGF.
 
 Most of the complexity here is dealing with two features of SGF:
@@ -20,7 +20,8 @@ Most of the complexity here is dealing with two features of SGF:
   to configure L+D puzzles, but also for initial handicap placement.
 - Plays don't necessarily alternate colors; they can be repeated B or W moves
   This feature is used to handle free handicap placement.
-"""
+'''
+from collections import namedtuple
 import numpy as np
 import itertools
 
@@ -35,6 +36,11 @@ SZ[{boardsize}]KM[{komi}]PW[{white_name}]PB[{black_name}]RE[{result}]
 {game_moves})'''
 
 PROGRAM_IDENTIFIER = "Minigo"
+
+
+def translate_sgf_move_qs(player_move, q):
+    return "{move}C[{q:.4f}]".format(
+        move=translate_sgf_move(player_move), q=q)
 
 
 def translate_sgf_move(player_move, comment):
@@ -60,7 +66,7 @@ def make_sgf(
     black_name=PROGRAM_IDENTIFIER,
     comments=[]
 ):
-    """Turn a game into SGF.
+    '''Turn a game into SGF.
 
     Doesn't handle handicap games or positions with incomplete history.
 
@@ -68,7 +74,7 @@ def make_sgf(
         move_history: iterable of PlayerMoves
         result_string: "B+R", "W+0.5", etc.
         comments: iterable of string/None. Will be zipped with move_history.
-    """
+    '''
     boardsize = go.N
     game_moves = ''.join(translate_sgf_move(*z)
                          for z in itertools.zip_longest(move_history, comments))
@@ -133,14 +139,9 @@ def maybe_correct_next(pos, next_node):
         pos.flip_playerturn(mutate=True)
 
 
-def get_sgf_root_node(sgf_contents):
-    collection = sgf.parse(sgf_contents)
-    game = collection.children[0]
-    return game.root
-
-
 def replay_sgf(sgf_contents):
-    """Wrapper for sgf files, returning go.PositionWithContext instances.
+    '''
+    Wrapper for sgf files, returning go.PositionWithContext instances.
 
     It does NOT return the very final position, as there is no follow up.
     To get the final position, call pwc.position.play_move(pwc.next_move)
@@ -150,18 +151,20 @@ def replay_sgf(sgf_contents):
     with open(filename) as f:
         for position_w_context in replay_sgf(f.read()):
             print(position_w_context.position)
-    """
-    root_node = get_sgf_root_node(sgf_contents)
-    props = root_node.properties
+    '''
+    collection = sgf.parse(sgf_contents)
+    game = collection.children[0]
+    props = game.root.properties
     assert int(sgf_prop(props.get('GM', ['1']))) == 1, "Not a Go SGF!"
 
     komi = 0
-    if props.get('KM') is not None:
+    if props.get('KM') != None:
         komi = float(sgf_prop(props.get('KM')))
-    result = utils.parse_game_result(sgf_prop(props.get('RE', '')))
+    result = utils.parse_game_result(sgf_prop(props.get('RE')))
+    assert result is not None
 
     pos = Position(komi=komi)
-    current_node = root_node
+    current_node = game.root
     while pos is not None and current_node.next is not None:
         pos = handle_node(pos, current_node)
         maybe_correct_next(pos, current_node.next)
