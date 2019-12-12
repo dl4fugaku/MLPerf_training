@@ -40,11 +40,12 @@ echo "STARTING TIMING RUN AT ${START_FMT}"
 #SEED=${1:-1}
 
 echo "Running benchmark with seed ${SEED}"
+rm -rf model/
 #. run_training.sh ${SEED} ${TARGET_UNCASED_BLEU_SCORE}
-SCOREP_TOTAL_MEMORY=4089446400 SCOREP_ENABLE_PROFILING=true SCOREP_ENABLE_TRACING=false \
+SCOREP_TOTAL_MEMORY=4089446400 SCOREP_ENABLE_PROFILING=false SCOREP_ENABLE_TRACING=true \
 OPENBLAS_NUM_THREADS=16 OMP_NUM_THREADS=16 TF_NUM_INTEROP_THREADS=2 TF_NUM_INTRAOP_THREADS=16 \
 python3.7 -m scorep --nopython ./transformer/transformer_main.py \
-	--train_epochs=1 --random_seed=${SEED} --data_dir=/home/domke/data/translation/processed_data \
+	--train_steps=200 --steps_between_eval=200 --random_seed=${SEED} --data_dir=/home/domke/data/translation/processed_data \
 	--model_dir=model --params=big --bleu_threshold ${TARGET_UNCASED_BLEU_SCORE} \
 	--bleu_source=/home/domke/data/translation/newstest2014.en --bleu_ref=/home/domke/data/translation/newstest2014.de
 

@@ -23,7 +23,8 @@ import os
 import random
 import sys
 import tarfile
-import urllib
+#import urllib
+import urllib.request as urllib
 
 import six
 import tensorflow.compat.v1 as tf

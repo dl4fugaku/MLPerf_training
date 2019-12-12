@@ -41,6 +41,7 @@ import translate
 from utils import dataset
 from utils import metrics
 from utils import tokenizer
+import scorep
 
 DEFAULT_TRAIN_EPOCHS = 10
 BLEU_DIR = "bleu"
@@ -266,14 +267,18 @@ def train_schedule(
   mlperf_log.transformer_print(key=mlperf_log.TRAIN_LOOP)
   for i in xrange(train_eval_iterations):
     print("Starting iteration", i + 1)
+    single_iteration_train_epochs=1 #not sure why and how, but without its errors out
 
     mlperf_log.transformer_print(key=mlperf_log.TRAIN_EPOCH,
                                  value=i * single_iteration_train_epochs + 1)
 
+    scorep.user.region_begin("training part")
     # Train the model for single_iteration_train_steps or until the input fn
     # runs out of examples (if single_iteration_train_steps is None).
     estimator.train(dataset.train_input_fn, steps=single_iteration_train_steps)
+    scorep.user.region_end("training part")
 
+    scorep.user.region_begin("evaluation part")
     mlperf_log.transformer_print(key=mlperf_log.EVAL_START)
     eval_results = estimator.evaluate(dataset.eval_input_fn)
     print("Evaluation results (iter %d/%d):" % (i + 1, train_eval_iterations),
@@ -288,6 +293,7 @@ def train_schedule(
       mlperf_log.transformer_print(key=mlperf_log.EVAL_TARGET, value=bleu_threshold)
       mlperf_log.transformer_print(key=mlperf_log.EVAL_ACCURACY, value=uncased_score)
     mlperf_log.transformer_print(key=mlperf_log.EVAL_STOP)
+    scorep.user.region_end("evaluation part")
 
 
 def main(_):
