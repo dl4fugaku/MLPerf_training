@@ -104,6 +104,7 @@ def get_latest_model():
     return models[-1]
 
 
+import selfplay_worker
 
 def main_():
     """Run the reinforcement learning loop
@@ -127,8 +128,9 @@ def main_():
     def start_worker(num_workers):
       #procs.append(subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE))
       worker_seed = hash(hash(SEED) + ITERATION) + num_workers
-      cmd = 'GOPARAMS={} python3 selfplay_worker.py {} {}'.format(os.environ['GOPARAMS'], BASE_DIR, worker_seed)
-      procs.append(subprocess.Popen(cmd, shell=True))
+      #cmd = 'SCOREP_TOTAL_MEMORY=4089446400 SCOREP_ENABLE_PROFILING=true SCOREP_ENABLE_TRACING=false OPENBLAS_NUM_THREADS=16 OMP_NUM_THREADS=16 TF_NUM_INTEROP_THREADS=2 TF_NUM_INTRAOP_THREADS=16 GOPARAMS={} python3.7 -m scorep --nopython /home/domke/MLPerf_training/reinforcement/tensorflow/minigo/selfplay_worker.py {} {}'.format(os.environ['GOPARAMS'], BASE_DIR, worker_seed)
+      #procs.append(subprocess.Popen(cmd, shell=True))
+      selfplay_worker.start_me_bunny(BASE_DIR, worker_seed)
 
     selfplay_dir = os.path.join(SELFPLAY_DIR, model_name)
     def count_games():

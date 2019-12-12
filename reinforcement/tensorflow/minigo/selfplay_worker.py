@@ -254,9 +254,24 @@ def rl_loop():
     print('Stopping selfplay after finding {} games played.'.format(count_games()))
 
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
+def start_me_bunny(_BASE_DIR, seed):
     #tf.logging.set_verbosity(tf.logging.INFO)
-    seed = int(sys.argv[2])
+    global BASE_DIR
+    BASE_DIR = _BASE_DIR
+    global MODELS_DIR
+    MODELS_DIR = os.path.join(_BASE_DIR, 'models')
+    global SELFPLAY_DIR
+    SELFPLAY_DIR = os.path.join(_BASE_DIR, 'data/selfplay')
+    global HOLDOUT_DIR
+    HOLDOUT_DIR = os.path.join(_BASE_DIR, 'data/holdout')
+    global SGF_DIR
+    SGF_DIR = os.path.join(_BASE_DIR, 'sgf')
+    global TRAINING_CHUNK_DIR
+    TRAINING_CHUNK_DIR = os.path.join(_BASE_DIR, 'data', 'training_chunks')
+    global ESTIMATOR_WORKING_DIR
+    ESTIMATOR_WORKING_DIR = os.path.join(_BASE_DIR, 'estimator_working_dir')
+    #seed = int(sys.argv[2])
     print('Self play worker: setting random seed = ', seed)
     random.seed(seed)
     tf.set_random_seed(seed)
