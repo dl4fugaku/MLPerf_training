@@ -6,7 +6,7 @@ import shutil
 import sys
 
 URL = 'http://ai.stanford.edu/%7Eamaas/data/sentiment/aclImdb_v1.tar.gz'
-DIR = os.path.expanduser('~/.cache/paddle/dataset/imdb')
+DIR = os.path.expanduser('~/data/sentiment_analysis')
 PATH = os.path.join(DIR, URL.split('/')[-1])
 CHUNK_SIZE = 4096
 

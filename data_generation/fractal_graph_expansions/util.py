@@ -28,7 +28,7 @@ from absl import logging
 import numpy as np
 import pandas as pd
 from scipy import sparse
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 def load_df_from_file(file_path, sep=",", header=0):
