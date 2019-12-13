@@ -2,7 +2,8 @@ import json
 
 import torch
 from torch.autograd import Variable
-from warpctc_pytorch import CTCLoss
+#from warpctc_pytorch import CTCLoss
+from torch.nn import CTCLoss
 
 import torch.nn.functional as F
 

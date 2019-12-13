@@ -16,12 +16,12 @@ noise_min  = 0.0 # minimum noise level to sample from (1.0 means all noise and n
 noise_max  = 0.5 # maximum noise level to sample from (1.0 means all noise and no original signal)
 
 # Platform parameters
-cuda = True
+cuda = False #True
 
 # Dataset location
 labels_path    = '../labels.json' #Contains all characters for prediction
-train_manifest = '../libri_train_manifest.csv' #relative path to train manifest is download_dataset is used
-val_manifest = '../libri_val_manifest.csv' #relative path to val manifest is download_dataset is used
+train_manifest = '/home/domke/data/speech_recognition/libri_train_manifest.csv' #relative path to train manifest is download_dataset is used
+val_manifest = '/home/domke/data/speech_recognition/libri_val_manifest.csv' #relative path to val manifest is download_dataset is used
 
 # Model parameters
 hidden_size   = 2560 # Hidden size of RNNs
@@ -31,7 +31,7 @@ rnn_type      = 'gru' #Type of the RNN. rnn|gru|lstm are supported
 rnn_act_type  = 'tanh' #Type of the activation within RNN. tanh | relu are supported
 
 # Training parameters
-epochs          = 10 # Number of training epochs
+epochs          = 1 # Number of training epochs
 learning_anneal = 1.1 # Annealing applied to learning rate every epoch
 lr              = 0.0001 # initial learning rate
 momentum        = 0.9 # momentum

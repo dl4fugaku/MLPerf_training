@@ -10,7 +10,8 @@ import numpy as np
 
 import torch
 from torch.autograd import Variable
-from warpctc_pytorch import CTCLoss
+#from warpctc_pytorch import CTCLoss
+from torch.nn import CTCLoss
 
 import torch.nn.functional as F
 
@@ -174,7 +175,7 @@ def main():
         model.train()
         end = time.time()
         for i, (data) in enumerate(train_loader, start=start_iter):
-            if i == len(train_loader):
+            if i == len(train_loader) or i == 256: #stop early
                 break
             inputs, targets, input_percentages, target_sizes = data
             # measure data loading time

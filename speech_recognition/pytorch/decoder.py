@@ -42,13 +42,13 @@ class Decoder(object):
         """Given a list of numeric sequences, returns the corresponding strings"""
         strings = []
         for x in xrange(len(sequences)):
-            seq_len = sizes[x] if sizes is not None else len(sequences[x])
+            seq_len = sizes[x].item()if sizes is not None else len(sequences[x])
             string = self._convert_to_string(sequences[x], seq_len)
             strings.append(string)
         return strings
 
     def _convert_to_string(self, sequence, sizes):
-        return ''.join([self.int_to_char[sequence[i]] for i in range(sizes)])
+        return ''.join([self.int_to_char[sequence.tolist()[i]] for i in range(sizes)])
 
     def process_strings(self, sequences, remove_repetitions=False):
         """
