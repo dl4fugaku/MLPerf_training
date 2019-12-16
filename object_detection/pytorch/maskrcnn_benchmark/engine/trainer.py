@@ -113,7 +113,7 @@ def do_train(
                     iter=iteration,
                     meters=str(meters),
                     lr=optimizer.param_groups[0]["lr"],
-                    memory=torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
+                    memory=1.0,
                 )
             )
         if iteration % checkpoint_period == 0 and arguments["save_checkpoints"]:

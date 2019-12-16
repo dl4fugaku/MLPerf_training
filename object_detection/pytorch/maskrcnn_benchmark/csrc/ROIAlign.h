@@ -41,6 +41,7 @@ at::Tensor ROIAlign_backward(const at::Tensor& grad,
     AT_ERROR("Not compiled with GPU support");
 #endif
   }
-  AT_ERROR("Not implemented on the CPU");
+  //AT_ERROR("Not implemented on the CPU");
+  return at::zeros({batch_size, channels, height, width}, grad.options());
 }
 

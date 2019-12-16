@@ -22,7 +22,7 @@ def generate_seeds(rng, size):
     return seeds
 
 def broadcast_seeds(seeds, device):
-    if torch.distributed.is_initialized():
+    if torch.distributed.is_available():
         seeds_tensor = torch.LongTensor(seeds).to(device)
         torch.distributed.broadcast(seeds_tensor, 0)
         seeds = seeds_tensor.tolist()

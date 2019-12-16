@@ -49,7 +49,7 @@ def test_and_exchange_map(tester, model, distributed):
         segm_map = 0.
 
     if distributed:
-        map_tensor = torch.tensor([bbox_map, segm_map], dtype=torch.float32, device=torch.device("cuda"))
+        map_tensor = torch.tensor([bbox_map, segm_map], dtype=torch.float32)
         torch.distributed.broadcast(map_tensor, 0)
         bbox_map = map_tensor[0].item()
         segm_map = map_tensor[1].item()
@@ -128,7 +128,7 @@ def train(cfg, local_rank, distributed):
     print_mlperf(key=mlperf_log.NMS_THRESHOLD, value=cfg.MODEL.RPN.NMS_THRESH)
 
     model = build_detection_model(cfg)
-    device = torch.device(cfg.MODEL.DEVICE)
+    device = torch.device('cpu') # torch.device(cfg.MODEL.DEVICE)
     model.to(device)
 
     optimizer = make_optimizer(cfg, model)
@@ -236,14 +236,14 @@ def main():
 
     if is_main_process:
         # Setting logging file parameters for compliance logging
-        os.environ["COMPLIANCE_FILE"] = '/MASKRCNN_complVv0.5.0_' + str(datetime.datetime.now())
+        os.environ["COMPLIANCE_FILE"] = '/dev/shm/MASKRCNN_complVv0.5.0_' + str(datetime.datetime.now())
         mlperf_log.LOG_FILE = os.getenv("COMPLIANCE_FILE")
         mlperf_log._FILE_HANDLER = logging.FileHandler(mlperf_log.LOG_FILE)
         mlperf_log._FILE_HANDLER.setLevel(logging.DEBUG)
         mlperf_log.LOGGER.addHandler(mlperf_log._FILE_HANDLER)
 
     if args.distributed:
-        torch.cuda.set_device(args.local_rank)
+        torch.set_device(args.local_rank)
         torch.distributed.init_process_group(
             backend="nccl", init_method="env://"
         )
@@ -254,9 +254,9 @@ def main():
         # setting seeds - needs to be timed, so after RUN_START
         if is_main_process():
             master_seed = random.SystemRandom().randint(0, 2 ** 32 - 1)
-            seed_tensor = torch.tensor(master_seed, dtype=torch.float32, device=torch.device("cuda"))
+            seed_tensor = torch.tensor(master_seed, dtype=torch.float32)
         else:
-            seed_tensor = torch.tensor(0, dtype=torch.float32, device=torch.device("cuda"))
+            seed_tensor = torch.tensor(0, dtype=torch.float32)
 
         torch.distributed.broadcast(seed_tensor, 0)
         master_seed = int(seed_tensor.item())
@@ -284,11 +284,11 @@ def main():
     logger.info(args)
 
     # generate worker seeds, one seed for every distributed worker
-    worker_seeds = generate_seeds(random_number_generator, torch.distributed.get_world_size() if torch.distributed.is_initialized() else 1)
+    worker_seeds = generate_seeds(random_number_generator, torch.distributed.get_world_size() if torch.distributed.is_available() else 1)
 
     # todo sharath what if CPU
     # broadcast seeds from rank=0 to other workers
-    worker_seeds = broadcast_seeds(worker_seeds, device='cuda')
+    worker_seeds = broadcast_seeds(worker_seeds, device='cpu')
 
     # Setting worker seeds
     logger.info("Worker {}: Setting seed {}".format(args.local_rank, worker_seeds[args.local_rank]))
