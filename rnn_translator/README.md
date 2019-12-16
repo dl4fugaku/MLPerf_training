@@ -1,3 +1,21 @@
+download (1GB; but 1h postprocessing)
+=====================================
+cd MLPerf_training/rnn_translator
+#mod line 22 for OUTPUT_DIR
+./download_dataset.sh
+ln -s -s ~/data/rnn_translator data
+bash ./verify_dataset.sh
+
+prep
+====
+python3.7 -m pip install --user --upgrade sacrebleu==1.2.10
+
+run
+===
+#maybe mod line 5/6 of run script to point to data
+./run.sh
+
+
 # 1. Problem
 
 This problem uses recurrent neural network to do language translation.
