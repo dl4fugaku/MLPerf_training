@@ -30,16 +30,16 @@ def barrier():
     doesn't implement barrier for NCCL backend.
     Calls all_reduce on dummy tensor and synchronizes with GPU.
     """
-    if torch.distributed.is_initialized():
-        torch.distributed.all_reduce(torch.cuda.FloatTensor(1))
-        torch.cuda.synchronize()
+    if torch.distributed.is_available():
+        torch.distributed.all_reduce(torch.FloatTensor(1))
+        torch.synchronize()
 
 
 def get_rank():
     """
     Gets distributed rank or returns zero if distributed is not initialized.
     """
-    if torch.distributed.is_initialized():
+    if torch.distributed.is_available():
         rank = torch.distributed.get_rank()
     else:
         rank = 0

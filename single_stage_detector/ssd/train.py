@@ -80,7 +80,7 @@ def dboxes300_coco():
 
 
 def coco_eval(model, coco, cocoGt, encoder, inv_map, threshold,
-              epoch, iteration, use_cuda=True):
+              epoch, iteration, use_cuda=False):
     from pycocotools.cocoeval import COCOeval
     print("")
     model.eval()
@@ -127,6 +127,7 @@ def coco_eval(model, coco, cocoGt, encoder, inv_map, threshold,
                                       (loc_[3] - loc_[1])*htot,
                                       prob_,
                                       inv_map[label_]])
+        if idx>100: break #break early
     print("")
     print("Predicting Ended, total time: {:.2f} s".format(time.time()-start))
 
@@ -266,6 +267,8 @@ def train300_mlperf_coco(args):
                          value=current_weight_decay)
     eval_points = np.array(args.evaluation) * 32 / global_batch_size
     eval_points = list(map(int, list(eval_points)))
+    #eval_points.append(50)  # add some early evaluations to trigger this code path
+    eval_points.append(100) # even when we break early
     print("epoch", "nbatch", "loss")
 
     iter_num = args.iteration
@@ -346,6 +349,7 @@ def train300_mlperf_coco(args):
                 if success[0]:
                     return True
             iter_num += 1
+            if iter_num>100: break #break early
     return False
 
 def main():
