@@ -91,7 +91,7 @@ def train(word_dict,
           quality,
           save_dirname=None):
     BATCH_SIZE = 128
-    PASS_NUM = 100
+    PASS_NUM = 1 #100
     dict_dim = len(word_dict)
     class_dim = 2
     target_val_acc = quality
@@ -136,7 +136,7 @@ def train(word_dict,
     def train_loop(main_program):
         exe.run(fluid.default_startup_program())
 
-        for pass_id in xrange(PASS_NUM):
+        for pass_id in range(PASS_NUM):
             train_loss_set = []
             train_acc_set = []  
    
@@ -146,9 +146,9 @@ def train(word_dict,
                 cost_val, acc_val = exe.run(main_program,
                                             feed=feeder.feed(data),
                                             fetch_list=[cost, acc_out])
-		train_loss_set.append(float(cost_val))
-		train_acc_set.append(float(acc_val)) 
-	    train_loss = np.array(train_loss_set).mean()
+                train_loss_set.append(float(cost_val))
+                train_acc_set.append(float(acc_val)) 
+            train_loss = np.array(train_loss_set).mean()
             train_acc = np.array(train_acc_set).mean() * 100
 
             # Calculate average valication loss and accuracy 
@@ -156,6 +156,7 @@ def train(word_dict,
             acc_set = []
             avg_loss_set = []
             for tid, test_data in enumerate(test_reader()):
+                
                 avg_loss_np, acc_np = exe.run(
                             program=test_program,
                             feed=feeder.feed(test_data),
@@ -208,14 +209,14 @@ if __name__ == '__main__':
     if args.model == 'conv':
         main(word_dict,
              net_method=convolution_net,
-             use_cuda=True, # Runs on CPU if "False"
+             use_cuda=False, # Runs on CPU if "False"
              seed=args.seed,
              quality=args.target_quality,
              save_dirname="understand_sentiment_conv.inference.model")
     else:
         main(word_dict,
              use_method=stacked_lstm_net,
-             use_cuda=True,
+             use_cuda=False,
              seed=args.seed,
              quality=args.target_quality,
              save_dirname="understand_sentiment_lstm.inference.model")
